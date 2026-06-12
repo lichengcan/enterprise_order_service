@@ -6,6 +6,7 @@ email-validator>=2.1.1
 python-dotenv>=1.0.1
 pymongo>=4.10.1
 mysql-connector-python>=9.1.0
+pymilvus>=2.5.0
 
 [dev]
 httpx>=0.27.0

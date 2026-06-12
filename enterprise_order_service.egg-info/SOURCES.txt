@@ -7,6 +7,7 @@ app/api/deps.py
 app/api/routes.py
 app/api/v1/__init__.py
 app/api/v1/customers.py
+app/api/v1/database_lab.py
 app/api/v1/health.py
 app/api/v1/orders.py
 app/api/v1/products.py
@@ -20,6 +21,10 @@ app/db/__init__.py
 app/db/base.py
 app/db/init_db.py
 app/db/session.py
+app/demo_db/__init__.py
+app/demo_db/mongo_store.py
+app/demo_db/mysql_store.py
+app/demo_db/schemas.py
 app/models/__init__.py
 app/models/base.py
 app/models/customer.py

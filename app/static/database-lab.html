@@ -1,0 +1,854 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Database Lab</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --line: #d9dee7;
+      --text: #17202a;
+      --muted: #5d6978;
+      --blue: #2563eb;
+      --green: #16845b;
+      --red: #c2412d;
+      --amber: #a15c07;
+      --ink: #111827;
+      --shadow: 0 12px 32px rgba(23, 32, 42, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      font-size: 14px;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    header {
+      background: var(--panel);
+      border-bottom: 1px solid var(--line);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.2;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .statusbar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .status {
+      min-height: 28px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border: 1px solid var(--line);
+      background: #fafafa;
+      border-radius: 6px;
+      padding: 4px 9px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--amber);
+    }
+
+    .status.ok .dot {
+      background: var(--green);
+    }
+
+    .status.fail .dot {
+      background: var(--red);
+    }
+
+    main {
+      width: min(1200px, 100%);
+      margin: 0 auto;
+      padding: 22px 24px 28px;
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    section {
+      min-width: 0;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .toolbar {
+      padding: 14px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .segmented {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+      padding: 4px;
+      background: #eef1f5;
+      border-radius: 8px;
+    }
+
+    .segmented button {
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      height: 34px;
+      cursor: pointer;
+    }
+
+    .segmented button.active {
+      background: var(--panel);
+      color: var(--ink);
+      box-shadow: 0 1px 4px rgba(23, 32, 42, 0.12);
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    #userPanel,
+    #vectorPanel {
+      display: grid;
+      gap: 14px;
+    }
+
+    label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    input {
+      width: 100%;
+      height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 7px 10px;
+      color: var(--ink);
+      background: #fff;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 210px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px;
+      color: var(--ink);
+      background: #fff;
+      outline: none;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    textarea:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .btn {
+      height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    .btn.primary {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+
+    .btn.danger {
+      border-color: #f0c7bd;
+      color: var(--red);
+    }
+
+    .btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .content {
+      display: grid;
+      gap: 12px;
+    }
+
+    .table-head {
+      height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.2;
+    }
+
+    .message {
+      min-height: 20px;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: right;
+    }
+
+    .message.error {
+      color: var(--red);
+    }
+
+    .table-wrap {
+      overflow: auto;
+      max-height: calc(100vh - 170px);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+    }
+
+    th,
+    td {
+      padding: 11px 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      background: #f9fafb;
+      color: var(--muted);
+      font-size: 12px;
+      z-index: 1;
+    }
+
+    td.id {
+      font-family: Consolas, "Courier New", monospace;
+      max-width: 210px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .row-actions {
+      display: flex;
+      gap: 6px;
+      justify-content: flex-end;
+    }
+
+    .small {
+      height: 30px;
+      padding: 0 9px;
+      border-radius: 6px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 860px) {
+      header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .statusbar {
+        justify-content: flex-start;
+      }
+
+      main {
+        grid-template-columns: 1fr;
+        padding: 14px;
+      }
+
+      .table-wrap {
+        max-height: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>Database Lab</h1>
+      <div class="statusbar">
+        <span id="mysqlStatus" class="status"><span class="dot"></span>MySQL</span>
+        <span id="mongoStatus" class="status"><span class="dot"></span>MongoDB</span>
+        <span id="milvusStatus" class="status"><span class="dot"></span>Milvus</span>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel toolbar">
+        <div class="segmented">
+          <button id="mysqlTab" class="active" type="button">MySQL</button>
+          <button id="mongodbTab" type="button">MongoDB</button>
+          <button id="milvusTab" type="button">Milvus</button>
+        </div>
+
+        <div id="userPanel">
+          <div class="field">
+            <label for="nameInput">Name</label>
+            <input id="nameInput" autocomplete="off" value="Alice" />
+          </div>
+
+          <div class="field">
+            <label for="emailInput">Email</label>
+            <input id="emailInput" autocomplete="off" />
+          </div>
+
+          <div class="field">
+            <label for="ageInput">Age</label>
+            <input id="ageInput" type="number" min="1" max="130" value="28" />
+          </div>
+        </div>
+
+        <div id="vectorPanel" class="hidden">
+          <div class="field">
+            <label for="jsonFileInput">Import JSON File</label>
+            <input id="jsonFileInput" type="file" accept="application/json,.json" />
+          </div>
+
+          <div class="field">
+            <label for="vectorJsonInput">Vector JSON</label>
+            <textarea id="vectorJsonInput" spellcheck="false"></textarea>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="createBtn" class="btn primary" type="button">Create</button>
+          <button id="refreshBtn" class="btn" type="button">Refresh</button>
+          <button id="searchBtn" class="btn hidden" type="button">Search</button>
+        </div>
+      </section>
+
+      <section class="panel content">
+        <div class="table-head">
+          <h2 id="tableTitle">MySQL Users</h2>
+          <div id="message" class="message"></div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Age</th>
+                <th>Updated</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="usersBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const state = {
+      backend: "mysql",
+      busy: false,
+      lastMilvusSearch: false,
+    };
+
+    const els = {
+      mysqlTab: document.querySelector("#mysqlTab"),
+      mongodbTab: document.querySelector("#mongodbTab"),
+      milvusTab: document.querySelector("#milvusTab"),
+      mysqlStatus: document.querySelector("#mysqlStatus"),
+      mongoStatus: document.querySelector("#mongoStatus"),
+      milvusStatus: document.querySelector("#milvusStatus"),
+      tableTitle: document.querySelector("#tableTitle"),
+      usersBody: document.querySelector("#usersBody"),
+      message: document.querySelector("#message"),
+      userPanel: document.querySelector("#userPanel"),
+      vectorPanel: document.querySelector("#vectorPanel"),
+      nameInput: document.querySelector("#nameInput"),
+      emailInput: document.querySelector("#emailInput"),
+      ageInput: document.querySelector("#ageInput"),
+      jsonFileInput: document.querySelector("#jsonFileInput"),
+      vectorJsonInput: document.querySelector("#vectorJsonInput"),
+      createBtn: document.querySelector("#createBtn"),
+      refreshBtn: document.querySelector("#refreshBtn"),
+      searchBtn: document.querySelector("#searchBtn"),
+    };
+
+    function api(path, options = {}) {
+      return fetch(path, {
+        headers: { "Content-Type": "application/json" },
+        ...options,
+      }).then(async (response) => {
+        const text = await response.text();
+        const data = text ? JSON.parse(text) : null;
+        if (!response.ok) {
+          throw new Error(data?.detail || response.statusText);
+        }
+        return data;
+      });
+    }
+
+    function setBusy(value) {
+      state.busy = value;
+      els.createBtn.disabled = value;
+      els.refreshBtn.disabled = value;
+      els.searchBtn.disabled = value;
+    }
+
+    function setMessage(text, error = false) {
+      els.message.textContent = text;
+      els.message.classList.toggle("error", error);
+    }
+
+    function formatDate(value) {
+      if (!value) return "";
+      return new Intl.DateTimeFormat("zh-CN", {
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(new Date(value));
+    }
+
+    function setBackend(backend) {
+      state.backend = backend;
+      state.lastMilvusSearch = false;
+      els.mysqlTab.classList.toggle("active", backend === "mysql");
+      els.mongodbTab.classList.toggle("active", backend === "mongodb");
+      els.milvusTab.classList.toggle("active", backend === "milvus");
+      els.userPanel.classList.toggle("hidden", backend === "milvus");
+      els.vectorPanel.classList.toggle("hidden", backend !== "milvus");
+      els.searchBtn.classList.toggle("hidden", backend !== "milvus");
+      els.tableTitle.textContent = tableTitle();
+      if (backend === "milvus") {
+        seedVectorJson();
+        loadVectors();
+      } else {
+        seedEmail();
+        loadUsers();
+      }
+    }
+
+    function tableTitle() {
+      if (state.backend === "mysql") return "MySQL Users";
+      if (state.backend === "mongodb") return "MongoDB Users";
+      return state.lastMilvusSearch ? "Milvus Search Results" : "Milvus Vectors";
+    }
+
+    function seedEmail() {
+      const suffix = Math.random().toString(16).slice(2, 8);
+      const prefix = state.backend === "mysql" ? "mysql" : "mongo";
+      els.emailInput.value = `${prefix}.${suffix}@example.com`;
+    }
+
+    function renderStatus(target, status) {
+      target.classList.toggle("ok", Boolean(status?.ok));
+      target.classList.toggle("fail", status && !status.ok);
+      target.title = status?.message || "";
+    }
+
+    async function loadStatus() {
+      try {
+        const status = await api("/api/v1/database-lab/status");
+        renderStatus(els.mysqlStatus, status.mysql);
+        renderStatus(els.mongoStatus, status.mongodb);
+        renderStatus(els.milvusStatus, status.milvus);
+      } catch (error) {
+        renderStatus(els.mysqlStatus, { ok: false, message: error.message });
+        renderStatus(els.mongoStatus, { ok: false, message: error.message });
+        renderStatus(els.milvusStatus, { ok: false, message: error.message });
+      }
+    }
+
+    async function loadUsers() {
+      setBusy(true);
+      setMessage("Loading");
+      try {
+        const users = await api(`/api/v1/database-lab/${state.backend}/users?limit=50`);
+        renderUsers(users);
+        setMessage(`${users.length} rows`);
+      } catch (error) {
+        renderUsers([]);
+        setMessage(error.message, true);
+      } finally {
+        setBusy(false);
+        loadStatus();
+      }
+    }
+
+    function renderUsers(users) {
+      els.usersBody.innerHTML = "";
+      document.querySelector("thead tr").innerHTML = `
+        <th>ID</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Age</th>
+        <th>Updated</th>
+        <th></th>
+      `;
+      for (const user of users) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="id" title="${escapeHtml(user.id)}">${escapeHtml(user.id)}</td>
+          <td>${escapeHtml(user.name)}</td>
+          <td>${escapeHtml(user.email)}</td>
+          <td>${escapeHtml(String(user.age))}</td>
+          <td>${escapeHtml(formatDate(user.updated_at))}</td>
+          <td>
+            <div class="row-actions">
+              <button class="btn small" type="button" data-action="copy">Copy</button>
+              <button class="btn small" type="button" data-action="update">Update</button>
+              <button class="btn danger small" type="button" data-action="delete">Delete</button>
+            </div>
+          </td>
+        `;
+        tr.querySelector("[data-action='copy']").addEventListener("click", () => fillForm(user));
+        tr.querySelector("[data-action='update']").addEventListener("click", () => updateEmail(user));
+        tr.querySelector("[data-action='delete']").addEventListener("click", () => deleteUser(user));
+        els.usersBody.appendChild(tr);
+      }
+    }
+
+    async function loadVectors() {
+      setBusy(true);
+      setMessage("Loading");
+      try {
+        const vectors = await api("/api/v1/database-lab/milvus/vectors?limit=50");
+        renderVectors(vectors, false);
+        setMessage(`${vectors.length} rows`);
+      } catch (error) {
+        renderVectors([], false);
+        setMessage(error.message, true);
+      } finally {
+        setBusy(false);
+        loadStatus();
+      }
+    }
+
+    function renderVectors(vectors, searched) {
+      state.lastMilvusSearch = searched;
+      els.tableTitle.textContent = tableTitle();
+      els.usersBody.innerHTML = "";
+      document.querySelector("thead tr").innerHTML = `
+        <th>ID</th>
+        <th>Title</th>
+        <th>Payload</th>
+        <th>Vector</th>
+        <th>${searched ? "Score" : "Updated"}</th>
+        <th></th>
+      `;
+      for (const vector of vectors) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="id" title="${escapeHtml(vector.id)}">${escapeHtml(vector.id)}</td>
+          <td>${escapeHtml(vector.title)}</td>
+          <td class="id" title="${escapeHtml(JSON.stringify(vector.payload))}">${escapeHtml(JSON.stringify(vector.payload))}</td>
+          <td class="id" title="${escapeHtml(JSON.stringify(vector.vector))}">${escapeHtml(JSON.stringify(vector.vector))}</td>
+          <td>${searched ? escapeHtml(Number(vector.score).toFixed(4)) : escapeHtml(formatDate(vector.updated_at))}</td>
+          <td>
+            <div class="row-actions">
+              <button class="btn small" type="button" data-action="copy">Copy</button>
+              <button class="btn small" type="button" data-action="update">Update</button>
+              <button class="btn danger small" type="button" data-action="delete">Delete</button>
+            </div>
+          </td>
+        `;
+        tr.querySelector("[data-action='copy']").addEventListener("click", () => fillVectorJson(vector));
+        tr.querySelector("[data-action='update']").addEventListener("click", () => updateVector(vector));
+        tr.querySelector("[data-action='delete']").addEventListener("click", () => deleteVector(vector));
+        els.usersBody.appendChild(tr);
+      }
+    }
+
+    function escapeHtml(value) {
+      return value.replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;",
+      })[char]);
+    }
+
+    function fillForm(user) {
+      els.nameInput.value = user.name;
+      els.emailInput.value = user.email;
+      els.ageInput.value = user.age;
+      setMessage(`Selected ${user.id}`);
+    }
+
+    function seedVectorJson() {
+      const suffix = Math.random().toString(16).slice(2, 8);
+      els.vectorJsonInput.value = JSON.stringify({
+        title: `Document ${suffix}`,
+        payload: {
+          source: "manual-json",
+          text: "Milvus vector CRUD demo",
+          tags: ["demo", "vector"],
+        },
+        vector: [0.12, 0.35, 0.58, 0.91],
+      }, null, 2);
+    }
+
+    function readVectorJson() {
+      const value = JSON.parse(els.vectorJsonInput.value);
+      if (!Array.isArray(value.vector)) {
+        throw new Error("JSON must include vector: number[]");
+      }
+      return value;
+    }
+
+    function fillVectorJson(vector) {
+      els.vectorJsonInput.value = JSON.stringify({
+        id: vector.id,
+        title: vector.title,
+        payload: vector.payload,
+        vector: vector.vector,
+      }, null, 2);
+      setMessage(`Selected ${vector.id}`);
+    }
+
+    async function createUser() {
+      if (state.backend === "milvus") {
+        return createVector();
+      }
+      setBusy(true);
+      setMessage("Creating");
+      try {
+        await api(`/api/v1/database-lab/${state.backend}/users`, {
+          method: "POST",
+          body: JSON.stringify({
+            name: els.nameInput.value.trim(),
+            email: els.emailInput.value.trim(),
+            age: Number(els.ageInput.value),
+          }),
+        });
+        seedEmail();
+        await loadUsers();
+      } catch (error) {
+        setMessage(error.message, true);
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    async function createVector() {
+      setBusy(true);
+      setMessage("Creating");
+      try {
+        await api("/api/v1/database-lab/milvus/vectors", {
+          method: "POST",
+          body: JSON.stringify(readVectorJson()),
+        });
+        seedVectorJson();
+        await loadVectors();
+      } catch (error) {
+        setMessage(error.message, true);
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    async function updateEmail(user) {
+      const nextEmail = window.prompt("Email", user.email);
+      if (!nextEmail) return;
+
+      setBusy(true);
+      setMessage("Updating");
+      try {
+        await api(`/api/v1/database-lab/${state.backend}/users/${user.id}/email`, {
+          method: "PATCH",
+          body: JSON.stringify({ email: nextEmail }),
+        });
+        await loadUsers();
+      } catch (error) {
+        setMessage(error.message, true);
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    async function deleteUser(user) {
+      if (!window.confirm(`Delete ${user.email}?`)) return;
+
+      setBusy(true);
+      setMessage("Deleting");
+      try {
+        await api(`/api/v1/database-lab/${state.backend}/users/${user.id}`, {
+          method: "DELETE",
+        });
+        await loadUsers();
+      } catch (error) {
+        setMessage(error.message, true);
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    async function updateVector(vector) {
+      let payload;
+      try {
+        payload = readVectorJson();
+      } catch (error) {
+        setMessage(error.message, true);
+        return;
+      }
+
+      setBusy(true);
+      setMessage("Updating");
+      try {
+        await api(`/api/v1/database-lab/milvus/vectors/${vector.id}`, {
+          method: "PUT",
+          body: JSON.stringify({
+            title: payload.title,
+            payload: payload.payload || {},
+            vector: payload.vector,
+          }),
+        });
+        await loadVectors();
+      } catch (error) {
+        setMessage(error.message, true);
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    async function deleteVector(vector) {
+      if (!window.confirm(`Delete vector ${vector.title}?`)) return;
+
+      setBusy(true);
+      setMessage("Deleting");
+      try {
+        await api(`/api/v1/database-lab/milvus/vectors/${vector.id}`, {
+          method: "DELETE",
+        });
+        await loadVectors();
+      } catch (error) {
+        setMessage(error.message, true);
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    async function searchVectors() {
+      setBusy(true);
+      setMessage("Searching");
+      try {
+        const payload = readVectorJson();
+        const results = await api("/api/v1/database-lab/milvus/search", {
+          method: "POST",
+          body: JSON.stringify({ vector: payload.vector, limit: 5 }),
+        });
+        renderVectors(results, true);
+        setMessage(`${results.length} hits`);
+      } catch (error) {
+        setMessage(error.message, true);
+      } finally {
+        setBusy(false);
+        loadStatus();
+      }
+    }
+
+    async function importJsonFile(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      els.vectorJsonInput.value = await file.text();
+      setMessage(`Imported ${file.name}`);
+      event.target.value = "";
+    }
+
+    els.mysqlTab.addEventListener("click", () => setBackend("mysql"));
+    els.mongodbTab.addEventListener("click", () => setBackend("mongodb"));
+    els.milvusTab.addEventListener("click", () => setBackend("milvus"));
+    els.createBtn.addEventListener("click", createUser);
+    els.refreshBtn.addEventListener("click", () => {
+      if (state.backend === "milvus") {
+        loadVectors();
+      } else {
+        loadUsers();
+      }
+    });
+    els.searchBtn.addEventListener("click", searchVectors);
+    els.jsonFileInput.addEventListener("change", importJsonFile);
+
+    seedEmail();
+    seedVectorJson();
+    loadStatus();
+    loadUsers();
+  </script>
+</body>
+</html>
